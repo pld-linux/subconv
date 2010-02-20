@@ -1,20 +1,19 @@
 #!/usr/bin/env python
 #
-# subconv v0.2.2 -- divx subtitles converter
-# (w)by Pawel Stolowski
-#       Julien Lerouge
+# subconv
+# divx subtitles converter by Pawel Stolowski, Julien Lerouge
+# mpl2 by Grzegorz Zyla
+#
+# Maintained at http://cvs.pld-linux.org/cgi-bin/cvsweb.cgi/packages/subconv/
 #
 # Released under terms of GNU GPL
 #
-# mpl2 (w) by Grzegorz Zyla
 
 import re, sys, getopt, string
 
 def usage():
     sys.stderr.write("""
- subconv v0.2.2 -- DivX subtitles converter
- (w)by Pawel Stolowski <yogin@linux.bydg.org>
-       Julien Lerouge  <julien.lerouge@free.fr>
+ subconv -- DivX subtitles converter by Pawel Stolowski, Julien Lerouge
 
  Usage: subconv [-i fmt|-o fmt|-a sec|-s sec|-S h:m:s[,h:m:s,...]] input [output1, output2, ...]
 
@@ -39,7 +38,7 @@ def detect_fps(list):
     sys.stderr.write("FPS guessing, here are approximate length of file for several FPS :\n")
     most_current = [24/1.001, 25.0, 30/1.001 ]
 
-    re_mdvd = re.compile("^[\{\[](\d+)[\}\]][\{\[](\d*)[\}\]]\s*(.*)")
+    re_mdvd = re.compile("^\{(\d+)\}\{(\d*)\}\s*(.*)")
     count = len(list) - 1
     m = re_mdvd.match(list[count])
     while not m:
@@ -69,7 +68,7 @@ def detect_format(list):
     returns: format (srt, tmp, mdvd) or "" if unknown
     """
     sys.stderr.write("Guessing subs format .")
-    re_mdvd = re.compile("^[\{\[](\d+)[\}\]][\{\[](\d*)[\}\]]\s*(.*)")
+    re_mdvd = re.compile("^\{(\d+)\}\{(\d*)\}\s*(.*)")
     re_srt = re.compile("^(\d+):(\d+):(\d+),\d+\s*-->.*")
     re_tmp = re.compile("^(\d+):(\d+):(\d+):(.*)")
     re_sub2 = re.compile("^(\d+):(\d+):(\d+)\.\d+\s*\,.*")
@@ -101,7 +100,7 @@ def read_mdvd(list, fps):
     input: contents of a file as list
     returns: list of subtitles in form: [[time_start in secs, time_end in secs, line1, ...],....]
     """
-    re1 = re.compile("^[\{\[](\d+)[\}\]][\{\[](\d*)[\}\]]\s*(.*)")
+    re1 = re.compile("^\{(\d+)\}\{(\d*)\}\s*(.*)")
 
     subtitles = []
     while len(list)>0:
