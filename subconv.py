@@ -37,7 +37,7 @@ def detect_fps(list):
     returns: FPS
     """
     sys.stderr.write("FPS guessing, here are approximate length of file for several FPS :\n")
-    most_current=[23.976,25.0,29.97]
+    most_current = [24/1.001, 25.0, 30/1.001 ]
 
     re_mdvd = re.compile("^[\{\[](\d+)[\}\]][\{\[](\d*)[\}\]]\s*(.*)")
     count = len(list) - 1
@@ -48,7 +48,7 @@ def detect_fps(list):
     last = int(m.group(2))
 
     for i in range(0,len(most_current)):
-        sys.stderr.write(str(i)+" "+str(most_current[i])+" Fps -> ")
+        sys.stderr.write("%s %.2f Fps -> " % (str(i), most_current[i]))
         tot_sec = int(last / most_current[i])
         min = tot_sec / 60
         sec = tot_sec % 60
@@ -109,11 +109,11 @@ def read_mdvd(list, fps):
         m = re1.match(x, 0)
         if m:
             time1 = int(m.group(1))
-            subt = [int(time1) / float(fps)]
+            subt = [ time1 / fps ]
             time2 = m.group(2)
             if time2 == '':
                 time2 = int(time1) + 20
-            subt.append(int(time2) / float(fps))
+            subt.append(int(time2) / fps)
             texts = m.group(3).strip().split("|")
             for i in range(len(texts)):
                 text = texts[i]
