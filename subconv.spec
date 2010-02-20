@@ -1,7 +1,7 @@
 Summary:	Subtitle formats converter
 Name:		subconv
-Version:	0.2.2
-Release:	3
+Version:	0.3
+Release:	1
 License:	GPL
 Group:		Applications/System
 Source0:	%{name}.py
