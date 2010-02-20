@@ -6,6 +6,7 @@
 #
 # Released under terms of GNU GPL
 #
+# mpl2 (w) by Grzegorz Zyla
 
 import re, sys, getopt, string
 
@@ -17,7 +18,7 @@ def usage():
 
  Usage: subconv [-i fmt|-o fmt|-a sec|-s sec|-S h:m:s[,h:m:s,...]] input [output1, output2, ...]
 	
-     -i fmt        input format (one of: srt, tmp, mdvd, sub2, auto; auto by default)
+     -i fmt        input format (one of: srt, tmp, mdvd, sub2, mpl2, auto; auto by default)
      -o fmt        output format (one of: tmp, srt; srt by default)
      -f fps        adjust fps rate for microdvd input subtitles (auto by default)
      -a sec        adjust subtitle delay in seconds (add)
@@ -72,6 +73,7 @@ def detect_format(list):
 	re_srt = re.compile("^(\d+):(\d+):(\d+),\d+\s*-->.*")
 	re_tmp = re.compile("^(\d+):(\d+):(\d+):(.*)")
 	re_sub2 = re.compile("^(\d+):(\d+):(\d+)\.\d+\s*\,.*")
+	re_mpl2 = re.compile("^\[(\d+)\]\[(\d+)\]\s*(.*)")
 	while len(list) > 0 :
 		sys.stderr.write(".")
 		line = list.pop(0)
@@ -87,6 +89,9 @@ def detect_format(list):
 		elif re_sub2.match(line):
 			sys.stderr.write(" subviewer 2 format\n")
 			return "sub2"
+		elif re_mpl2.match(line):
+			sys.stderr.write(" mpl2\n")
+			return "mpl2"			
 	return ""
 
 
@@ -107,7 +112,23 @@ def read_mdvd(list, fps):
 			subtitles.append(subt)
 	return subtitles
 
-
+def read_mpl2(list):
+	"""
+	Read mpl2 subtitles
+	input: contents of a file as list
+	returns: list of subtitles in form: [[time_start in secs, time_end is secs, line1, ...],.....]
+	"""
+	re1 = re.compile("^\[(\d+)\]\[(\d+)\]\s*(.*)")
+	subtitles = []
+	while len(list)>0:
+		m = re1.match(list.pop(0),0);
+		if m:
+			subt = [int(m.group(1))*0.1]
+			subt.append(int(m.group(2))*0.1)
+			subt.extend(m.group(3).strip().split("|"))
+			subtitles.append(subt)
+	return subtitles
+	
 def read_sub2(list):
 	"""
 	Reads subviewer 2.0 format subtitles, e.g. :
@@ -314,6 +335,8 @@ def read_subs(file,fmt,fps):
 		return read_subs(file,detect_format(subs),fps)
 	elif fmt == "sub2":
 		return read_sub2(subs)
+	elif fmt == "mpl2":
+		return read_mpl2(subs)
 	else:
 		sys.stderr.write("Input format not specified/recognized\n")
 		sys.exit(1)
