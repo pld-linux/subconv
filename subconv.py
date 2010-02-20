@@ -37,7 +37,7 @@ def detect_fps(list):
 	returns: FPS
 	"""
 	sys.stderr.write("FPS guessing, here are approximate length of file for several FPS :\n")
-	most_current=[23.976,25.0,29.0]
+	most_current=[23.976,25.0,29.97]
 	
 	re_mdvd = re.compile("^[\{\[](\d+)[\}\]][\{\[](\d*)[\}\]]\s*(.*)")
 	count = len(list) - 1
