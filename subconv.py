@@ -39,7 +39,7 @@ def detect_fps(list):
 	sys.stderr.write("FPS guessing, here are approximate length of file for several FPS :\n")
 	most_current=[23.976,25.0,29.0]
 	
-	re_mdvd = re.compile("^\{(\d+)\}\{(\d*)\}\s*(.*)")
+	re_mdvd = re.compile("^[\{\[](\d+)[\}\]][\{\[](\d*)[\}\]]\s*(.*)")
 	count = len(list) - 1
 	m = re_mdvd.match(list[count])
 	while not m:
@@ -69,7 +69,7 @@ def detect_format(list):
 	returns: format (srt, tmp, mdvd) or "" if unknown
 	"""
 	sys.stderr.write("Guessing subs format .")
-	re_mdvd = re.compile("^\{(\d+)\}\{(\d*)\}\s*(.*)")
+	re_mdvd = re.compile("^[\{\[](\d+)[\}\]][\{\[](\d*)[\}\]]\s*(.*)")
 	re_srt = re.compile("^(\d+):(\d+):(\d+),\d+\s*-->.*")
 	re_tmp = re.compile("^(\d+):(\d+):(\d+):(.*)")
 	re_sub2 = re.compile("^(\d+):(\d+):(\d+)\.\d+\s*\,.*")
@@ -101,14 +101,28 @@ def read_mdvd(list, fps):
 	input: contents of a file as list
 	returns: list of subtitles in form: [[time_start in secs, time_end in secs, line1, ...],....]
 	"""
-	re1 = re.compile("^\{(\d+)\}\{(\d*)\}\s*(.*)")
+	re1 = re.compile("^[\{\[](\d+)[\}\]][\{\[](\d*)[\}\]]\s*(.*)")
+
 	subtitles = []
 	while len(list)>0:
-		m = re1.match(list.pop(0), 0)
+		x = list.pop(0)
+		m = re1.match(x, 0)
 		if m:
-			subt = [int(m.group(1)) / float(fps)]
-			subt.append(int(m.group(2)) / float(fps))
-			subt.extend(m.group(3).strip().split("|"))
+			time1 = int(m.group(1))
+			subt = [int(time1) / float(fps)]
+			time2 = m.group(2)
+			if time2 == '':
+				time2 = int(time1) + 20
+			subt.append(int(time2) / float(fps))
+			texts = m.group(3).strip().split("|")
+			for i in range(len(texts)):
+				text = texts[i]
+				if text.lower().startswith('{c:') or text.lower().startswith('{y:'):
+					end_marker = text.index('}')
+					if end_marker:
+						text = text[end_marker + 1:]
+						texts[i] = text
+			subt.extend(texts)
 			subtitles.append(subt)
 	return subtitles
 
