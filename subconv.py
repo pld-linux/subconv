@@ -53,7 +53,10 @@ def detect_file_fps(file):
         re_fps = re.compile(r'^.*, (\d+\.{0,1}\d{0,}) fps,.*')
         m = re_fps.match(out)
         if m:
-            return float(m.group(1))
+            fps = m.group(1)
+            if fps == '23.98':
+                fps = 24/1.001
+            return float(fps)
         return False
 
     print "Guessing fps",
