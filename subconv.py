@@ -35,7 +35,11 @@ def detect_file_fps(file):
     returns: FPS
     """
     def mediainfo_fps(file):
-        f = subprocess.Popen(['mediainfo', '--Inform=Video;%FrameRate%', file], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        f = None
+        try:
+            f = subprocess.Popen(['mediainfo', '--Inform=Video;%FrameRate%', file], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        except OSError, e:
+            return False
         (out, err) = f.communicate()
         if out:
             out = out.strip()
@@ -44,7 +48,11 @@ def detect_file_fps(file):
         return float(out)
 
     def file_fps(file):
-        f = subprocess.Popen(['file', file], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        f = None
+        try:
+            f = subprocess.Popen(['file', file], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        except OSError, e:
+            return False
         (out, err) = f.communicate()
         if out:
             out = out.strip()
