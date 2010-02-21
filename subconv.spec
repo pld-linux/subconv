@@ -1,12 +1,13 @@
 Summary:	Subtitle formats converter
 Name:		subconv
 Version:	0.3
-Release:	2
+Release:	3
 License:	GPL
 Group:		Applications/System
 Source0:	%{name}.py
 URL:		http://cvs.pld-linux.org/cgi-bin/cvsweb.cgi/packages/subconv/
 Requires:	python-modules
+Suggests:	mediainfo
 BuildArch:	noarch
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
