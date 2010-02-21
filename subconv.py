@@ -9,7 +9,7 @@
 # Released under terms of GNU GPL
 #
 
-import re, sys, getopt, string
+import re, sys, getopt, string, os, subprocess
 
 def usage():
     sys.stderr.write("""
@@ -28,6 +28,50 @@ def usage():
      """)
 
 
+def detect_file_fps(file):
+    """
+    Detect the FPS for a given media file
+    input: file name
+    returns: FPS
+    """
+    def mediainfo_fps(file):
+        f = subprocess.Popen(['mediainfo', '--Inform=Video;%FrameRate%', file], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        (out, err) = f.communicate()
+        if not out:
+            return False
+        return float(out)
+
+    def file_fps(file):
+        f = subprocess.Popen(['file', file], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        (out, err) = f.communicate()
+        if not out:
+            return False
+        re_fps = re.compile(r'^.*, (\d+\.{0,1}\d{0,}) fps,.*')
+        m = re_fps.match(out)
+        if m:
+            return float(m.group(1))
+        return False
+
+    print "Guessing fps",
+    file = os.path.basename(file)
+    if len(file) <= 4:
+        return False
+    dir = os.path.dirname(file)
+    if not dir:
+        dir = '.'
+    mfile = file[:-4]
+    ref = re.compile(r'^' + mfile + '.*')
+    for file in os.listdir(dir):
+        if not ref.match(file):
+            continue
+        fps = mediainfo_fps(file)
+        if not fps:
+            fps = file_fps(file)
+        if fps:
+            print "from file %s: %.3f" % (file, fps)
+            return fps
+    print " .. unknown"
+    return False
 
 def detect_fps(list):
     """
@@ -47,7 +91,7 @@ def detect_fps(list):
     last = int(m.group(2))
 
     for i in range(0,len(most_current)):
-        sys.stderr.write("%s %.2f Fps -> " % (str(i), most_current[i]))
+        sys.stderr.write("%s %.3f Fps -> " % (str(i), most_current[i]))
         tot_sec = int(last / most_current[i])
         min = tot_sec / 60
         sec = tot_sec % 60
@@ -342,7 +386,9 @@ def read_subs(file,fmt,fps):
         return read_srt(subs)
     elif fmt == "mdvd":
         if fps == -1:
-            fps = detect_fps(subs)
+            fsp = detect_file_fps(file)
+            if not fps:
+                fps = detect_fps(subs)
         return read_mdvd(subs, fps)
     elif fmt == "auto":
         return read_subs(file,detect_format(subs),fps)
