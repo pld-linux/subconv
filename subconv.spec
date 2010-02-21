@@ -6,7 +6,7 @@ License:	GPL
 Group:		Applications/System
 Source0:	%{name}.py
 URL:		http://cvs.pld-linux.org/cgi-bin/cvsweb.cgi/packages/subconv/
-Requires:	python-modules
+Requires:	python-modules >= 1:2.4
 Suggests:	mediainfo
 BuildArch:	noarch
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
