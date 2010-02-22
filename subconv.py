@@ -401,7 +401,7 @@ def read_subs(file,fmt,fps):
         return read_srt(subs)
     elif fmt == "mdvd":
         if fps == -1:
-            fsp = detect_file_fps(file)
+            fps = detect_file_fps(file)
             if not fps:
                 fps = detect_fps(subs)
         return read_mdvd(subs, fps)
