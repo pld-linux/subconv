@@ -126,29 +126,22 @@ def detect_format(list):
     input: contents of a file as list
     returns: format (srt, tmp, mdvd) or "" if unknown
     """
-    sys.stderr.write("Guessing subs format .")
     re_mdvd = re.compile("^\{(\d+)\}\{(\d*)\}\s*(.*)")
     re_srt = re.compile("^(\d+):(\d+):(\d+),\d+\s*-->.*")
     re_tmp = re.compile("^(\d+):(\d+):(\d+):(.*)")
     re_sub2 = re.compile("^(\d+):(\d+):(\d+)\.\d+\s*\,.*")
     re_mpl2 = re.compile("^\[(\d+)\]\[(\d+)\]\s*(.*)")
     while len(list) > 0 :
-        sys.stderr.write(".")
         line = list.pop(0)
         if re_mdvd.match(line):
-            sys.stderr.write(" mdvd\n")
             return "mdvd"
         elif re_srt.match(line):
-            sys.stderr.write(" srt\n")
             return "srt"
         elif re_tmp.match(line):
-            sys.stderr.write(" tmp\n")
             return "tmp"
         elif re_sub2.match(line):
-            sys.stderr.write(" subviewer 2 format\n")
             return "sub2"
         elif re_mpl2.match(line):
-            sys.stderr.write(" mpl2\n")
             return "mpl2"			
     return ""
 
@@ -406,7 +399,9 @@ def read_subs(file,fmt,fps):
                 fps = detect_fps(subs)
         return read_mdvd(subs, fps)
     elif fmt == "auto":
-        return read_subs(file,detect_format(subs),fps)
+	fmt = detect_format(subs)
+        sys.stderr.write("Guessing subs format .. %s\n" % fmt )
+        return read_subs(file,fmt,fps)
     elif fmt == "sub2":
         return read_sub2(subs)
     elif fmt == "mpl2":
@@ -419,83 +414,86 @@ def read_subs(file,fmt,fps):
 #
 #-----------------------------------------------------------------------------------------
 
+def main(argv=sys.argv):
 
-outfunc = {
-  "srt":to_srt,
-  "tmp":to_tmp}
+    outfunc = {
+      "srt":to_srt,
+      "tmp":to_tmp}
 
-infmt = "auto"
-outfmt = "srt"
-subdelay = 0
-fps = -1
-#out_to_file == 1 => output to a file, 0 => output stdout, -1 => Split, output to stdout not allowed
-out_to_file = 0
-
-try:
-    opts, args = getopt.getopt(sys.argv[1:], 'i:o:a:s:S:f:h')
-except getopt.GetoptError:
-    usage()
-    sys.exit(2)
-
-splittimes = []
-
-for opt, arg in opts:
-    if opt == '-o':
-        if outfunc.has_key(arg):
-            outfmt = arg
-        else:
-            sys.stderr.write("Unknown output format.\n")
-            sys.exit(1)
-    elif opt == '-i':
-        infmt = arg
-    elif opt == '-a':
-        subdelay = float(arg)
-    elif opt == '-s':
-        subdelay = -float(arg)
-    elif opt == '-S':
-        out_to_file = -1
-        splittimes = get_split_times(arg)
-    elif opt == '-f':
-        fps = float(arg)
-    elif opt == '-h':
-        usage()
-        sys.exit(1)
-
-#
-# number of file names must be 2 + number of split-points
-if len(args) == len(splittimes)+2:
-    out_to_file = 1
-elif len(args) == len(splittimes)+1 and out_to_file != -1:
+    infmt = "auto"
+    outfmt = "srt"
+    subdelay = 0
+    fps = -1
+    #out_to_file == 1 => output to a file, 0 => output stdout, -1 => Split, output to stdout not allowed
     out_to_file = 0
-else:
-    sys.stderr.write("Too few file names given!\n")
-    usage()
-    sys.exit(1)
 
-#
-# read file
-sub = read_subs(args.pop(0),infmt,fps)
+    try:
+	opts, args = getopt.getopt(sys.argv[1:], 'i:o:a:s:S:f:h')
+    except getopt.GetoptError:
+	usage()
+        sys.exit(2)
 
-#
-# apply DELAY
-if subdelay != 0:
-    sub = sub_add_offset(sub, subdelay)
+    splittimes = []
 
-#
-# apply SPLIT
-if len(splittimes) == 0:
-    sub_list = [sub]
-else:
-    sub_list = sub_split(sub, splittimes)
+    for opt, arg in opts:
+	if opt == '-o':
+    	    if outfunc.has_key(arg):
+        	outfmt = arg
+    	    else:
+        	sys.stderr.write("Unknown output format.\n")
+        	sys.exit(1)
+        elif opt == '-i':
+	    infmt = arg
+        elif opt == '-a':
+	    subdelay = float(arg)
+        elif opt == '-s':
+	    subdelay = -float(arg)
+        elif opt == '-S':
+	    out_to_file = -1
+            splittimes = get_split_times(arg)
+        elif opt == '-f':
+	    fps = float(arg)
+        elif opt == '-h':
+	    usage()
+    	    sys.exit(1)
 
-#
-# save file(S)
-for nsub in sub_list:
-    s = outfunc[outfmt](nsub)
-    if out_to_file == 1:
-        dst = open(args.pop(0), 'w')
-        dst.writelines(s)
-        dst.close()
+    # number of file names must be 2 + number of split-points
+    if len(args) == len(splittimes)+2:
+	out_to_file = 1
+    elif len(args) == len(splittimes)+1 and out_to_file != -1:
+	out_to_file = 0
     else:
-        sys.stdout.writelines(s)
+	sys.stderr.write("Too few file names given!\n")
+        usage()
+	sys.exit(1)
 
+    # read file
+    sub = read_subs(args.pop(0),infmt,fps)
+
+    # apply DELAY
+    if subdelay != 0:
+	sub = sub_add_offset(sub, subdelay)
+
+    # apply SPLIT
+    if len(splittimes) == 0:
+	sub_list = [sub]
+    else:
+	sub_list = sub_split(sub, splittimes)
+
+    # save file(S)
+    for nsub in sub_list:
+	s = outfunc[outfmt](nsub)
+	if out_to_file == 1:
+    	    dst = open(args.pop(0), 'w')
+    	    dst.writelines(s)
+    	    dst.close()
+	else:
+    	    sys.stdout.writelines(s)
+
+if __name__ == "__main__":
+    ret = None
+    try:
+        ret = main()
+    except (KeyboardInterrupt, SystemExit):
+        print >> sys.stderr, "%s: Interrupted, aborting." % os.path.basename(sys.argv[0])
+    sys.exit(ret)
