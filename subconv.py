@@ -9,7 +9,20 @@
 # Released under terms of GNU GPL
 #
 
-import re, sys, getopt, string, os, subprocess
+import re
+import sys
+import getopt
+import string
+import os
+import subprocess
+import urllib2
+
+from xml.dom import minidom
+
+try:
+    from hashlib import md5 as md5
+except ImportError:
+    from md5 import md5
 
 def usage():
     sys.stderr.write("""
@@ -67,6 +80,24 @@ def detect_file_fps(file):
             return float(fps)
         return False
 
+    def napiprojekt_fps(file):
+        try:
+            d = md5()
+            d.update(open(file).read(10485760))
+            digest = d.hexdigest()
+            url = "http://napiprojekt.pl/api/api.php?mode=file_info&client=pynapi&id=%s" % (urllib2.quote(digest))
+            f = urllib2.urlopen(url)
+            fps_xml = f.read()
+            f.close()
+            xml = minidom.parseString(fps_xml)
+            name = xml.getElementsByTagName("fps")
+            fps = " ".join(t.nodeValue for t in name[0].childNodes if t.nodeType == t.TEXT_NODE)
+        except Exception, e:
+            return False
+        if fps:
+            return float(fps)
+        return False
+
     print "Guessing fps",
     file = os.path.basename(file)
     if len(file) <= 4:
@@ -82,6 +113,8 @@ def detect_file_fps(file):
         fps = mediainfo_fps(file)
         if not fps:
             fps = file_fps(file)
+        if not fps:
+            fps = napiprojekt_fps(file)
         if fps:
             print "from file %s: %.3f" % (file, fps)
             return fps
