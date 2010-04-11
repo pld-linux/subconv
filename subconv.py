@@ -393,6 +393,17 @@ def sub_split(sub, times):
         minussec = second
     return lists
 
+def sub_fix_times(sub):
+    for i in range( len(sub) - 2 ):
+	approx = 1 + ( len(" ".join(sub[i][2:])) / 10 )			# 10 char per second
+	# end < start or end > start++ or displayed longer then 20s
+	if (sub[i][1] < sub[i][0]) or (sub[i][1] > sub[i + 1][0]) or ( sub[i][1] - sub[i][0] > 20):	
+	    if ( sub[i][0] + approx ) < sub[i + 1][0]:
+		sub[i][1] = sub[i][0] + approx
+	    else:
+		sub[i][1] = sub[i + 1][0] - 1.0 / 10
+    return sub
+
 def get_split_times(str):
     """
     Converts comma-separated string of "xx:yy:zz,xx:yy:zz,..." times to list of times (in seconds)
