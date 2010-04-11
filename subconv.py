@@ -164,8 +164,7 @@ def detect_format(list):
     re_tmp = re.compile("^(\d+):(\d+):(\d+):(.*)")
     re_sub2 = re.compile("^(\d+):(\d+):(\d+)\.\d+\s*\,.*")
     re_mpl2 = re.compile("^\[(\d+)\]\[(\d+)\]\s*(.*)")
-    while len(list) > 0 :
-        line = list.pop(0)
+    for line in list:
         if re_mdvd.match(line):
             return "mdvd"
         elif re_srt.match(line):
