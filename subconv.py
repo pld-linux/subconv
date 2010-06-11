@@ -110,11 +110,11 @@ def detect_file_fps(file):
     for file in os.listdir(dir):
         if not ref.match(file):
             continue
-        fps = mediainfo_fps(file)
+        fps = mediainfo_fps(os.path.join(dir,file))
         if not fps:
-            fps = file_fps(file)
+            fps = file_fps(os.path.join(dir,file))
         if not fps:
-            fps = napiprojekt_fps(file)
+            fps = napiprojekt_fps(os.path.join(dir,file))
         if fps:
             print "from file %s: %.3f" % (file, fps)
             return fps
