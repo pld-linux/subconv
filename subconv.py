@@ -99,12 +99,12 @@ def detect_file_fps(file):
         return False
 
     print "Guessing fps",
-    file = os.path.basename(file)
-    if len(file) <= 4:
-        return False
     dir = os.path.dirname(file)
     if not dir:
         dir = '.'
+    file = os.path.basename(file)
+    if len(file) <= 4:
+        return False
     mfile = file[:-4]
     ref = re.compile(r'^' + mfile + '.*')
     for file in os.listdir(dir):
