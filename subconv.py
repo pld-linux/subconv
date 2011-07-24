@@ -195,7 +195,7 @@ def read_mdvd(list, fps):
             subt = [ time1 / fps ]
             time2 = m.group(2)
             if time2 == '':
-                time2 = int(time1) + 20
+                time2 = int(time1) + 80
             subt.append(int(time2) / fps)
             texts = m.group(3).strip().split("|")
             for i in range(len(texts)):
