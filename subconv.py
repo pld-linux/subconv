@@ -4,11 +4,12 @@
 # divx subtitles converter by Pawel Stolowski, Julien Lerouge
 # mpl2 by Grzegorz Zyla
 #
-# Maintained at http://cvs.pld-linux.org/cgi-bin/cvsweb.cgi/packages/subconv/
+# Maintained at http://git.pld-linux.org/packages/subconv/
 #
 # Released under terms of GNU GPL
 #
 
+import codecs
 import re
 import sys
 import getopt
@@ -431,6 +432,11 @@ def read_subs(file,fmt,fps):
     src = open(file,'r')
     subs = src.readlines()
     src.close()
+
+    # skip utf8 BOM
+    if len(subs) and len(subs[0]) > 3 and subs[0][0:3] == codecs.BOM_UTF8:
+        subs[0] = subs[0][3:]
+
     if fmt == "tmp":
         return read_tmp(subs)
     elif fmt == "srt":
@@ -442,7 +448,7 @@ def read_subs(file,fmt,fps):
                 fps = detect_fps(subs)
         return read_mdvd(subs, fps)
     elif fmt == "auto":
-	fmt = detect_format(subs)
+        fmt = detect_format(subs)
         sys.stderr.write("Guessing subs format .. %s\n" % fmt )
         return read_subs(file,fmt,fps)
     elif fmt == "sub2":
